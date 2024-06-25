@@ -1,5 +1,6 @@
 #include "AVL_Database.hpp"
 #include <cassert>
+#include <iostream> //needed for cout
 using namespace std;
 
 

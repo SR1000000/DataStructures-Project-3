@@ -32,7 +32,11 @@ private:
     
     AVLNode* rotateRight(AVLNode* y);
     AVLNode* rotateLeft(AVLNode* x);
+    
+    AVLNode* doBalance(AVLNode* a);
+    int updateHeight(AVLNode* a);
 
+    AVLNode* insertHelper(AVLNode* node, Record* r);
 
 public:
     AVLTree();
