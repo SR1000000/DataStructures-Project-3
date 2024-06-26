@@ -19,43 +19,39 @@ int AVLTree::balance(AVLNode* node) {
 //Check balance of node, balancing it with rotations if required
 AVLNode* AVLTree::doBalance(AVLNode* a) {
     if(abs(balance(a->left)) > 1) {
-        return doBalance(a->left);
+        a->left = doBalance(a->left);
     }
     if(abs(balance(a->right)) > 1) {
-        return doBalance(a->right);
+        a->right = doBalance(a->right);
     }
     
-    int b = balance(a);
-    if(b > 1)
-        return rotateRight(a);
-    else if(b < 1)
-        return rotateLeft(a);
-    else {
-        if(a->left) {
-            a->left = doBalance(a->left);
+    if(balance(a) > 1) {
+        if(balance(a->left) >= 0)
+            return rotateRight(a);
+        else {
+            a->left = rotateLeft(a->left);
+            return rotateRight(a);
         }
-        if(a->right) {
-            a->right = doBalance(a->right);
-        }   
-        return a;    
+    } else if(balance(a) < -1) {
+        if(balance(a->right) <=0)
+            return rotateLeft(a);
+        else {
+            a->right = rotateRight(a->right);
+            return rotateLeft(a);
+        }
+    } else {
+        updateHeight(a);
+        return a;
     }
 }
 
-/*
-int AVLTree::updateHeight(AVLNode* a) {
-    int lh = 1, rh = 1;
-    if(a->left) 
-        lh = updateHeight(a->left);
-    if(a->right)
-        rh = updateHeight(a->right);
-    
-    if(lh > rh)
-        a->height = lh;
+//Assumes node exists
+void AVLTree::updateHeight(AVLNode* node) {
+    if(height(node->left) >= height(node->right))
+        node->height = height(node->left) + 1;
     else
-        a->height = rh;
-
-    return a->height;
-} */
+        node->height = height(node->right) + 1;
+}
 
 //Assumes y->left exists
 AVLNode* AVLTree::rotateRight(AVLNode* y) {
@@ -67,6 +63,9 @@ AVLNode* AVLTree::rotateRight(AVLNode* y) {
         std::cout << "Error: Expected y->left exist but not.";
     yLeft->right = y;
     y->left = yLeftRight;
+
+    updateHeight(y);
+    updateHeight(yLeft);
 
     return yLeft;
 }
@@ -81,6 +80,9 @@ AVLNode* AVLTree::rotateLeft(AVLNode* x) {
         std::cout << "Error: Expected x->right exist but not.";
     xRight->left = x;
     x->right = xRightLeft;
+
+    updateHeight(x);
+    updateHeight(xRight);
 
     return xRight;
 }
@@ -115,7 +117,7 @@ AVLNode* AVLTree::insertHelper(AVLNode* node, Record* r) {
 }
 
 Record* AVLTree::search(const std::string& key, int value) {
-
+    return nullptr;
 }
 
 
@@ -141,17 +143,21 @@ void IndexedDatabase::deleteRecord(const std::string& key, int value) {
 }
 
 std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) {
-   
+    std::vector<Record*> output;
+
+    return output;
 }
 
 std::vector<Record*> IndexedDatabase::findKNearestKeys(int key, int k) {
-    
+    std::vector<Record*> output;
+   
+    return output; 
 }
 
 std::vector<Record*> IndexedDatabase::inorderTraversal() {
-   std::vector<Record*> output;
+    std::vector<Record*> output;
    
-   return output;
+    return output;
 }
 
 void IndexedDatabase::clearDatabase() {
@@ -159,6 +165,6 @@ void IndexedDatabase::clearDatabase() {
 }
 
 int IndexedDatabase::countRecords() {
-   
+    return 0;
 }
 
