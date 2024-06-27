@@ -8,11 +8,11 @@ AVLNode::AVLNode(Record* r) : record(r), left(nullptr), right(nullptr), height(1
 
 AVLTree::AVLTree() : root(nullptr) {}
 
-int AVLTree::height(AVLNode* node) {
+int AVLTree::height(AVLNode* node) const {
     return node ? node->height : 0;
 }
 
-int AVLTree::balance(AVLNode* node) {
+int AVLTree::balance(AVLNode* node) const {
     return node ? height(node->left) - height(node->right) : 0;
 }
 
@@ -40,7 +40,7 @@ AVLNode* AVLTree::doBalance(AVLNode* a) {
             return rotateLeft(a);
         }
     } else {
-        updateHeight(a);
+        updateHeight(a);    //necessary to propagate height changes from rebalance up the tree
         return a;
     }
 }
@@ -103,68 +103,137 @@ AVLNode* AVLTree::insertHelper(AVLNode* node, Record* r) {
     } else {
         if(node->record->value > r->value) {
             node->left = insertHelper(node->left, r);
-            if(height(node->left) >= height(node))
+            if(height(node->left) >= height(node))  //updates height up the entire chain if necessary
                 node->height++;
         } else { 
             node->right = insertHelper(node->right, r);
-            if(height(node->right) >= height(node))
+            if(height(node->right) >= height(node)) //updates height up the entire chain if necessary
                 node->height++;
         }
-        //node->height = (height(node->left) > height(node->right)) ? height(node->left) + 1 : height(node->right) + 1;
-
         return node;
     }
 }
 
-Record* AVLTree::search(const std::string& key, int value) {
-    return nullptr;
+Record* AVLTree::search(const std::string& key, int value) const {
+        return searchHelper(root, key, value);
 }
 
-
+//Recursive helpter for search, returns nullptr if not found
+Record* AVLTree::searchHelper(AVLNode* node, const std::string& key, int value) const {
+    if(!node) {   //base case 1: goes down the tree until the end with no match found
+        Record* newRecord = new Record("", 0);
+        return newRecord;
+    }
+    if(node->record->key == key && node->record->value == value)    //base case 2: key/value match found
+        return node->record;
+    else if(value < node->record->value)    //recursive case: go down left if value lower
+        return searchHelper(node->left, key, value);
+    else                                    //recursive case: go down right if value higher
+        return searchHelper(node->right, key, value);
+}
 
 void AVLTree::deleteNode(const std::string& key, int value) {
-    
+    root = deleteHelper(root, key, value);  //assigning the returned node allows us to keep control
+                                            //on the chain of modification
+    if(root) {
+        updateHeight(root);
+        doBalance(root);
+    }
+
 }
 
+AVLNode* AVLTree::deleteHelper(AVLNode* node, const std::string& key, int value) {
+    if(!node)   //case 1: recursion led us to the end of tree without match 
+        return nullptr;
+    if(node->record->value == value && node->record->key == key) {  //case 2: matching node found
+        if(node->left && node->right) { //case 2a: node has both left and right subtrees
 
+        } else if(node->left || node->right) {  //case 2b: node has only left subtree, or only right subtree
 
+        } else {    //case 2c: node has neither left or right, and is a leaf node
+            delete node;
+            return nullptr;
+        }
+    } else {
+        if(value < node->record->value) //case 3: no matching node, value is less than node
+            node->left = deleteHelper(node->left, key, value);
+        else if(value > node->record->value)    //case 4: no matching node, value is greater than node
+            node->right = deleteHelper(node->right, key, value);
+        updateHeight(node);
+    }
+}
 
+void AVLTree::deleteAll() {
+    deleteAllHelper(root);
+    root = nullptr;
+}
+
+void AVLTree::deleteAllHelper(AVLNode* node) {
+    if(node) {  //recursive case: node exists, propagate to left and right branches
+        deleteAllHelper(node->left);
+        deleteAllHelper(node->right);
+        delete node;
+    }
+    //base case: node does not exist/nullptr, do nothing
+}
+
+std::vector<Record*> AVLTree::inorderTraversal() const {
+    return iotHelper(root);
+}
+
+//Assumes a exists
+std::vector<Record*> AVLTree::iotHelper(AVLNode* a) const {
+    std::vector<Record*> out = {}, temp;
+
+    if(a->left)
+        out = iotHelper(a->left);
+    
+    out.push_back(a->record);
+    
+    if(a->right) {
+        temp = iotHelper(a->right);
+        out.insert(out.end(), temp.begin(), temp.end());
+    }
+    
+    return out;
+}
 
 void IndexedDatabase::insert(Record* record) {
-   index.insert(record);
+    index.insert(record);
+    std::cout << countRecords() << " ";  //DEBUG
 }
 
-Record* IndexedDatabase::search(const std::string& key, int value) {
+Record* IndexedDatabase::search(const std::string& key, int value) const {
     return index.search(key, value);
 }
 
 void IndexedDatabase::deleteRecord(const std::string& key, int value) {
     index.deleteNode(key, value);
+    std::cout << countRecords() << " ";  //DEBUG
 }
 
-std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) {
+std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) const {
     std::vector<Record*> output;
 
     return output;
 }
 
-std::vector<Record*> IndexedDatabase::findKNearestKeys(int key, int k) {
+std::vector<Record*> IndexedDatabase::findKNearestKeys(int key, int k) const {
     std::vector<Record*> output;
    
     return output; 
 }
 
-std::vector<Record*> IndexedDatabase::inorderTraversal() {
-    std::vector<Record*> output;
-   
-    return output;
+std::vector<Record*> IndexedDatabase::inorderTraversal() const {
+    return index.inorderTraversal();
 }
+    
 
 void IndexedDatabase::clearDatabase() {
-   
+    index.deleteAll();
 }
 
-int IndexedDatabase::countRecords() {
-    return 0;
+int IndexedDatabase::countRecords() const {
+    return index.inorderTraversal().size();
 }
 
