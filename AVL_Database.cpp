@@ -45,7 +45,7 @@ AVLNode* AVLTree::doBalance(AVLNode* a) {
     }
 }
 
-//Assumes node exists
+//Assumes node exists, usually used in recursion and designed to propagate in post-order fashion
 void AVLTree::updateHeight(AVLNode* node) {
     if(height(node->left) >= height(node->right))
         node->height = height(node->left) + 1;
@@ -118,7 +118,7 @@ Record* AVLTree::search(const std::string& key, int value) const {
         return searchHelper(root, key, value);
 }
 
-//Recursive helpter for search, returns nullptr if not found
+//Recursive helpter for search, returns empty new record if not found
 Record* AVLTree::searchHelper(AVLNode* node, const std::string& key, int value) const {
     if(!node) {   //base case 1: goes down the tree until the end with no match found
         Record* newRecord = new Record("", 0);
@@ -143,21 +143,35 @@ void AVLTree::deleteNode(const std::string& key, int value) {
 }
 
 AVLNode* AVLTree::deleteHelper(AVLNode* node, const std::string& key, int value) {
-    if(!node)   //case 1: recursion led us to the end of tree without match 
+    if(!node)   //base case 1: recursion led us to the end of tree without match 
         return nullptr;
-    if(node->record->value == value && node->record->key == key) {  //case 2: matching node found
+    if(node->record->value == value && node->record->key == key) {  //base case 2: matching node found
         if(node->left && node->right) { //case 2a: node has both left and right subtrees
-
+            AVLNode *curr = node->right;
+            while(curr->left) {
+                //prev = curr;  //don't need prev actually
+                curr = curr->left;
+            }   //at the end of the while, curr points to node's successor and prev points to curr's parent
+            node->record->key = curr->record->key;  //copy key/value of successor to current node
+            node->record->value = curr->record->value;
+            node->right = deleteHelper(node->right, curr->record->key, curr->record->value);    //discard second copy of successor
+        
         } else if(node->left || node->right) {  //case 2b: node has only left subtree, or only right subtree
-
+            AVLNode* temp;
+            if(node->left)
+                temp = node->left;
+            else if(node->right)
+                temp = node->right;
+            delete node;
+            return temp;
         } else {    //case 2c: node has neither left or right, and is a leaf node
             delete node;
             return nullptr;
         }
     } else {
-        if(value < node->record->value) //case 3: no matching node, value is less than node
+        if(value < node->record->value) //recursive case 3: not matching node, value is less than node
             node->left = deleteHelper(node->left, key, value);
-        else if(value > node->record->value)    //case 4: no matching node, value is greater than node
+        else if(value > node->record->value)    //recursive case 4: not matching node, value is greater than node
             node->right = deleteHelper(node->right, key, value);
         updateHeight(node);
     }
