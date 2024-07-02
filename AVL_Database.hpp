@@ -13,6 +13,19 @@ public:
     Record(const std::string& k, int v);
 };
 
+struct RecordPtrCmp1 {
+    bool operator()(const Record* a, const Record* b) const
+    {
+        return a->value < b->value;
+    }
+};
+struct RecordPtrCmp2 {
+    bool operator()(const Record* a, const Record* b) const
+    {
+        return a->value > b->value;
+    }
+};
+
 class AVLNode {
 public:
     Record* record;
@@ -39,6 +52,8 @@ private:
     AVLNode* insertHelper(AVLNode* node, Record* r);
     Record* searchHelper(AVLNode* node, const std::string& key, int value) const;
     std::vector<Record*> iotHelper(AVLNode* a) const;
+    std::vector<Record*> rangeQueryHelper(AVLNode* a, int start, int end) const;
+    std::vector<Record*> fKNKHelper(AVLNode* a, int key, int k) const;
     AVLNode* deleteHelper(AVLNode* node, const std::string& key, int value);
 
 public:
@@ -46,6 +61,8 @@ public:
     void insert(Record* record);
     Record* search(const std::string& key, int value) const;
     std::vector<Record*> inorderTraversal() const;
+    std::vector<Record*> rangeQuery(int start, int end) const;
+    std::vector<Record*> findKNearestKeys(int key, int k) const;
     void deleteNode(const std::string& key, int value);
     void deleteAll();
     void deleteAllHelper(AVLNode* node);
